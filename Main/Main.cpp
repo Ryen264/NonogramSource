@@ -2,6 +2,6 @@
 
 int main()
 {
-    cout << "Hello World!\n";
+    cout << "Chao\n";
     return 0;
 }
