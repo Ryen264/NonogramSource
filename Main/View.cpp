@@ -129,29 +129,31 @@ void DrawObject(vector<wstring> contentsArr, int bgdColor, int txtColor, int nPo
 		Text(contentsArr[i], bgdColor, txtColor, nPosX, nPosY + i, pBuffer, pColor);
 }
 
-void DrawFrame(int width, int height, int first_x, int first_y, wchar_t* pBuffer, WORD* pColor) {
+void DrawFrame(int width, int height, int first_x, int first_y, int line, wchar_t* pBuffer, WORD* pColor) {
 	if (pBuffer == NULL)
 		pBuffer = screenBuffer;
 	if (pColor == NULL)
 		pColor = screenColor;
 
-	pBuffer[first_y * screenWidth + first_x] = L'╔';
+	pBuffer[first_y * screenWidth + first_x] = Lines[line][3];
 	for (int i = first_x + 1; i < first_x + width - 1; i++)
-		pBuffer[first_y * screenWidth + i] = L'═';
+		pBuffer[first_y * screenWidth + i] = Lines[line][0];
 
-	pBuffer[first_y * screenWidth + first_x + width - 1] = L'╗';
+	pBuffer[first_y * screenWidth + first_x + width - 1] = Lines[line][4];
 	for (int j = first_y + 1; j < first_y + height - 1; j++)
-		pBuffer[j * screenWidth + first_x + width - 1] = L'║';
+		pBuffer[j * screenWidth + first_x + width - 1] = Lines[line][1];
 
-	pBuffer[(first_y + height - 1) * screenWidth + first_x + width - 1] = L'╝';
+	pBuffer[(first_y + height - 1) * screenWidth + first_x + width - 1] = Lines[line][6];
 	for (int i = first_x + 1; i < first_x + width - 1; i++)
-		pBuffer[(first_y + height - 1) * screenWidth + i] = L'═';
+		pBuffer[(first_y + height - 1) * screenWidth + i] = Lines[line][0];
 
-	pBuffer[(first_y + height - 1) * screenWidth + first_x] = L'╚';
+	pBuffer[(first_y + height - 1) * screenWidth + first_x] = Lines[line][5];
 	for (int j = first_y + 1; j < first_y + height - 1; j++)
-		pBuffer[j * screenWidth + first_x] = L'║';
+		pBuffer[j * screenWidth + first_x] = Lines[line][1];
 }
-void DrawBoard(int first_x, int first_y, int numWidth, int numHeight, wchar_t* pBuffer, WORD* pColor, int unit) {
+void DrawBoard(int first_x, int first_y, int numWidth, int numHeight, int** board, wchar_t* pBuffer, WORD* pColor, int unit) {
+	if (board == NULL)
+		board = boardMat;
 	if (numWidth == 0)
 		numWidth = boardWidth;
 	if (numHeight == 0)
@@ -162,21 +164,19 @@ void DrawBoard(int first_x, int first_y, int numWidth, int numHeight, wchar_t* p
 		pColor = screenColor;
 
 	int width = numWidth * unit * 3 + numWidth + 1, height = numHeight * unit + numHeight + 1;
-	DrawFrame(width + 4, height + 2, first_x, first_y);
-	first_x += 2; first_y++;
 
 	for (int i = first_x; i < first_x + width; i++)
-		if (i % (5 * unit * 3 + 4 + 1) == first_x)
+		if ((i - first_x) % (5 * unit * 3 + 4 + 1) == 0)
 			pBuffer[first_y * screenWidth + i] = L'┳';
-		else if (i % (unit * 3 + 1) == 0)
+		else if ((i - first_x) % (unit * 3 + 1) == 0)
 			pBuffer[first_y * screenWidth + i] = L'┯';
 		else
 			pBuffer[first_y * screenWidth + i] = L'━';
 	
 	for (int j = first_y; j < first_y + height; j++)
-		if (j % (5 * unit + 4 + 1) == first_y)
+		if ((j - first_y) % (5 * unit + 4 + 1) == 0)
 			pBuffer[j * screenWidth + first_x] = L'┣';
-		else if (j % (unit + 1) == 0)
+		else if ((j - first_y) % (unit + 1) == 0)
 			pBuffer[j * screenWidth + first_x] = L'┠';
 		else
 			pBuffer[j * screenWidth + first_x] = L'┃';
@@ -204,7 +204,6 @@ void DrawBoard(int first_x, int first_y, int numWidth, int numHeight, wchar_t* p
 				pBuffer[j * screenWidth + i] = L'│';
 
 
-
 	for (int i = first_x + 1; i < first_x + width; i++)
 		if ((i - first_x - 1) % (5 * unit * 3 + 4 + 1) == 5 * unit * 3 + 4)
 			pBuffer[(first_y + height - 1) * screenWidth + i] = L'┻';
@@ -217,13 +216,25 @@ void DrawBoard(int first_x, int first_y, int numWidth, int numHeight, wchar_t* p
 		else if ((j - first_y - 1) % (unit + 1) == unit)
 			pBuffer[j * screenWidth + first_x + width - 1] = L'┨';
 	
-	// ▗▄▄▄▖═══╗
-	// ▐███▌ ╳ ║
-	// ▝▀▀▀▘═══╝
 	pBuffer[first_y					* screenWidth + first_x				] = L'┏';
 	pBuffer[first_y					* screenWidth + first_x + width - 1	] = L'┓';
 	pBuffer[(first_y + height - 1)	* screenWidth + first_x				] = L'┗';
 	pBuffer[(first_y + height - 1)	* screenWidth + first_x + width - 1	] = L'┛';
+
+
+	for (int i = 0, x = first_x + 2; i < boardWidth; i++, x += 4)
+		for (int j = 0, y = first_y + 1; j < boardHeight; j++, y += 2)
+			switch (board[j][i]) {
+			case 1: {
+				pBuffer[y * screenWidth + x - 1] = L'▐';
+				pBuffer[y * screenWidth + x] = L'█';
+				pBuffer[y * screenWidth + x + 1] = L'▌';
+				break;
+			}
+			case -1:
+				pBuffer[y * screenWidth + x] = L'Χ';
+				break;
+			}
 }
 //side up-left-down-right : 0 1 2 3
 void DrawSide(vector<vector<int>> numsList, int first_x, int first_y, int side, int numWidth, int numHeight, wchar_t* pBuffer, WORD* pColor, int unit) {
@@ -237,13 +248,115 @@ void DrawSide(vector<vector<int>> numsList, int first_x, int first_y, int side, 
 		pColor = screenColor;
 
 	switch (side) {
-	case 0:
-		break;
-	case 1:
-		break;
-	case 2:
-		break;
-	case 3:
+	case 0: {
+		for (int i = 0, x = first_x; i < boardWidth; i++, x += (unit * 3 + 1)) {
+			vector<int> tmp = {};
+			//find number of != 0
+			int n = 0;
+			while (numsList[boardHeight + i][n] != 0) n++;
+			for (int j = 0; j < numsList[boardHeight + i].size() - n; j++)
+				tmp.push_back(0);
+			for (int j = 0; j < n; j++)
+				tmp.push_back(numsList[boardHeight + i][j]);
+
+			for (int j = 0, y = first_y; j < tmp.size(); j++, y++)
+				if (tmp[j] != 0)
+					pBuffer[y * screenWidth + x] = tmp[j] + L'0';
+		}
 		break;
 	}
+	case 1: {
+		for (int j = 0, y = first_y; j < boardHeight; j++, y += (unit + 1)) {
+			vector<int> tmp = {};
+			//find number of != 0
+			int n = 0;
+			while (numsList[j][n] != 0) n++;
+			for (int i = 0; i < numsList[j].size() - n; i++)
+				tmp.push_back(0);
+			for (int i = 0; i < n; i++)
+				tmp.push_back(numsList[j][i]);
+
+			for (int i = 0, x = first_x; i < tmp.size(); i++, x += 2)
+				if (tmp[i] != 0)
+					pBuffer[y * screenWidth + x] = tmp[i] + L'0';
+		}
+		break;
+	}
+	case 2: {
+		for (int i = 0, x = first_x; i < boardWidth; i++, x += (unit * 3 + 1))
+			for (int j = 0, y = first_y; j < numsList[boardHeight + i].size(); j++, y++)
+				if (numsList[boardHeight + i][j] != 0)
+					pBuffer[y * screenWidth + x] = numsList[boardHeight + i][j] + L'0';
+				else
+					break;
+		break;
+	}
+	case 3: {
+		for (int j = 0, y = first_y; j < boardHeight; j++, y += (unit + 1))
+			for (int i = 0, x = first_x; i < numsList[j].size(); i++, x += 2)
+				if (numsList[j][i] != 0)
+					pBuffer[y * screenWidth + x] = numsList[j][i] + L'0';
+				else
+					break;
+		break;
+	}
+	}
+}
+void DrawFlagbox(int first_x, int first_y, wchar_t* pBuffer, WORD* pColor) {
+	if (pBuffer == NULL)
+		pBuffer = screenBuffer;
+	if (pColor == NULL)
+		pColor = screenColor;
+
+	pBuffer[(first_y + 1) * screenWidth + first_x + 2] = L'Χ';
+
+	pBuffer[(first_y + 1) * screenWidth + first_x + 5] = L'▐';
+	pBuffer[(first_y + 1) * screenWidth + first_x + 6] = L'█';
+	pBuffer[(first_y + 1) * screenWidth + first_x + 7] = L'▌';
+
+	if (flag == 1) {
+		pBuffer[first_y * screenWidth + first_x] = L' ';
+		pBuffer[first_y * screenWidth + first_x + 1] = pBuffer[first_y * screenWidth + first_x + 2] = pBuffer[first_y * screenWidth + first_x + 3] = L' ';
+		pBuffer[first_y * screenWidth + first_x + 4] = L' ';
+		pBuffer[(first_y + 1) * screenWidth + first_x] = pBuffer[(first_y + 1) * screenWidth + first_x + 4] = L' ';
+		pBuffer[(first_y + 2) * screenWidth + first_x] = L' ';
+		pBuffer[(first_y + 2) * screenWidth + first_x + 1] = pBuffer[(first_y + 2) * screenWidth + first_x + 2] = pBuffer[(first_y + 2) * screenWidth + first_x + 3] = L' ';
+		pBuffer[(first_y + 2) * screenWidth + first_x + 4] = L' ';
+
+		pBuffer[first_y * screenWidth + first_x + 4] = L'╭';
+		pBuffer[first_y * screenWidth + first_x + 5] = pBuffer[first_y * screenWidth + first_x + 6] = pBuffer[first_y * screenWidth + first_x + 7] = L'─';
+		pBuffer[first_y * screenWidth + first_x + 8] = L'╮';
+		pBuffer[(first_y + 1) * screenWidth + first_x + 4] = pBuffer[(first_y + 1) * screenWidth + first_x + 8] = L'│';
+		pBuffer[(first_y + 2) * screenWidth + first_x + 4] = L'╰';
+		pBuffer[(first_y + 2) * screenWidth + first_x + 5] = pBuffer[(first_y + 2) * screenWidth + first_x + 6] = pBuffer[(first_y + 2) * screenWidth + first_x + 7] = L'─';
+		pBuffer[(first_y + 2) * screenWidth + first_x + 8] = L'╯';
+	}
+	else {
+		pBuffer[first_y * screenWidth + first_x + 4] = L' ';
+		pBuffer[first_y * screenWidth + first_x + 5] = pBuffer[first_y * screenWidth + first_x + 6] = pBuffer[first_y * screenWidth + first_x + 7] = L' ';
+		pBuffer[first_y * screenWidth + first_x + 8] = L' ';
+		pBuffer[(first_y + 1) * screenWidth + first_x + 4] = pBuffer[(first_y + 1) * screenWidth + first_x + 8] = L' ';
+		pBuffer[(first_y + 2) * screenWidth + first_x + 4] = L' ';
+		pBuffer[(first_y + 2) * screenWidth + first_x + 5] = pBuffer[(first_y + 2) * screenWidth + first_x + 6] = pBuffer[(first_y + 2) * screenWidth + first_x + 7] = L' ';
+		pBuffer[(first_y + 2) * screenWidth + first_x + 8] = L' ';
+
+		pBuffer[first_y * screenWidth + first_x] = L'╭';
+		pBuffer[first_y * screenWidth + first_x + 1] = pBuffer[first_y * screenWidth + first_x + 2] = pBuffer[first_y * screenWidth + first_x + 3] = L'─';
+		pBuffer[first_y * screenWidth + first_x + 4] = L'╮';
+		pBuffer[(first_y + 1) * screenWidth + first_x] = pBuffer[(first_y + 1) * screenWidth + first_x + 4] = L'│';
+		pBuffer[(first_y + 2) * screenWidth + first_x] = L'╰';
+		pBuffer[(first_y + 2) * screenWidth + first_x + 1] = pBuffer[(first_y + 2) * screenWidth + first_x + 2] = pBuffer[(first_y + 2) * screenWidth + first_x + 3] = L'─';
+		pBuffer[(first_y + 2) * screenWidth + first_x + 4] = L'╯';
+	}
+}
+void DrawHealthnum(int first_x, int first_y, wchar_t* pBuffer, WORD* pColor) {
+	if (pBuffer == NULL)
+		pBuffer = screenBuffer;
+	if (pColor == NULL)
+		pColor = screenColor;
+
+	for (int i = 0; i < health; i++, first_x += 6)
+		DrawObject(Heart, -1, 6, first_x, first_y);
+	for (int i = 0; i < 3 - health; i++, first_x += 6)
+		DrawObject(Heart, -1, 13, first_x, first_y);
 }

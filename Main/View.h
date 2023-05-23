@@ -15,6 +15,9 @@ void Text(wstring wsContent, int bgdColor, int txtColor, int nPosX, int nPosY, w
 //no background color: bgdColor = -1
 void DrawObject(vector<wstring> wsContent, int bgdColor, int txtColor, int nPosX, int nPosY, wchar_t* pBuffer = NULL, WORD* pColor = NULL);
 
-void DrawFrame(int width, int height, int first_x, int first_y, wchar_t* pBuffer = NULL, WORD* pColor = NULL);
-void DrawBoard(int first_x, int first_y, int numWidth = 0, int numHeight = 0, wchar_t* pBuffer = NULL, WORD* pColor = NULL, int unit = 1);
+void DrawFrame(int width, int height, int first_x, int first_y, int line, wchar_t* pBuffer = NULL, WORD* pColor = NULL);
+void DrawBoard(int first_x, int first_y, int numWidth = 0, int numHeight = 0, int** board = NULL, wchar_t* pBuffer = NULL, WORD* pColor = NULL, int unit = 1);
+void DrawSide(vector<vector<int>> numsList, int first_x, int first_y, int side, int numWidth = 0, int numHeight = 0, wchar_t* pBuffer = NULL, WORD* pColor = NULL, int unit = 1);
+void DrawFlagbox(int first_x, int first_y, wchar_t* pBuffer = NULL, WORD* pColor = NULL);
+void DrawHealthnum(int first_x, int first_y, wchar_t* pBuffer = NULL, WORD* pColor = NULL);
 #endif

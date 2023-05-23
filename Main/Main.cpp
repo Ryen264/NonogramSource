@@ -15,8 +15,8 @@ int main()
 	Configure();
 	ClearScreen();
     gameList[0] = Single(0);
+	ShowCur(0);
 
-	getchar();
 	ShowCur(1);
 	ShowScrollbar(1);
 	system("Mode 120, 9001");

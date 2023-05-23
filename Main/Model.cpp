@@ -8,11 +8,14 @@ bool CheckFull() {
 				return false;
 	return true;
 }
-void AutoMark(vector<vector<int>> numsList) {
+void AutoMark(vector<vector<int>> numsList, int** board) {
+	if (board == NULL)
+		board = boardMat;
+
 	int count = 0;
 	vector<int> tmp{};
 	for (int j = 0; j < boardWidth; j++)
-		if (boardMat[boardY][j] == 1)
+		if (board[boardY][j] == 1)
 			count++;
 		else {
 			if (count != 0)
@@ -23,16 +26,21 @@ void AutoMark(vector<vector<int>> numsList) {
 		tmp.push_back(count);
 	count = 0;
 
+	//Add zeros after
+	while (tmp.size() < (boardWidth + 1) / 2)
+		tmp.push_back(0);
+
+	//check row
 	if (tmp == numsList[boardY]) {
 		for (int j = 0; j < boardWidth; j++)
-			if (boardMat[boardY][j] == 0)
-				boardMat[boardY][j] = -1;
+			if (board[boardY][j] == 0)
+				board[boardY][j] = -1;
 		return;
 	}
 
 	tmp.clear();
 	for (int i = 0; i < boardHeight; i++)
-		if (boardMat[i][boardX] == 1)
+		if (board[i][boardX] == 1)
 			count++;
 		else {
 			if (count != 0)
@@ -43,10 +51,15 @@ void AutoMark(vector<vector<int>> numsList) {
 		tmp.push_back(count);
 	count = 0;
 
+	//Add zeros after
+	while (tmp.size() < (boardHeight + 1) / 2)
+		tmp.push_back(0);
+
+	//check column
 	if (tmp == numsList[boardHeight + boardX]) {
 		for (int i = 0; i < boardHeight; i++)
-			if (boardMat[i][boardX] == 0)
-				boardMat[i][boardX] = -1;
+			if (board[i][boardX] == 0)
+				board[i][boardX] = -1;
 	}
 }
 
@@ -69,7 +82,7 @@ vector<vector<int>> GenerateNums(int** answerMat) {
 		count = 0;
 
 		//Add zeros after
-		while (tmp.size() < (boardWidth + 1) % 2)
+		while (tmp.size() < (boardWidth + 1) / 2)
 			tmp.push_back(0);
 
 		numsList.push_back(tmp);
@@ -87,8 +100,9 @@ vector<vector<int>> GenerateNums(int** answerMat) {
 		if (count != 0)
 			tmp.push_back(count);
 		count = 0;
+
 		//Add zeros after
-		while (tmp.size() < (boardHeight + 1) % 2)
+		while (tmp.size() < (boardHeight + 1) / 2)
 			tmp.push_back(0);
 
 		numsList.push_back(tmp);
@@ -115,69 +129,97 @@ int Single(int idGame) {
 		//load data board, flag, health, boardX, boardY, screenX, screenY
 
 	//Ve ban choi
-	DrawBoard(10, 5);
-	Display();
-
-	//find maxSize of columns numsLists
-	/*int maxSize = numsList[boardHeight].size();
-	for (int j = 0; j < boardWidth; j++)
-		if (maxSize < numsList[boardHeight + j].size())
-			maxSize = numsList[boardHeight + j].size();
-
-	for (int k = 0; k < maxSize; k++) {
-		for (int j = 0; j < boardWidth; j++) {
-			if (k < numsList[boardHeight + j].size())
-				cout << numsList[boardHeight + j][k];
-			else
-				cout << ' ';
-			cout << ' ';
-		}
-		cout << endl;
-	}*/
+	int first_x = 10, first_y = 5;
+	DrawBoard(first_x, first_y);
+	DrawSide(numsList, first_x + 2, first_y - (boardHeight + 1) / 2, 0);
+	DrawSide(numsList, first_x - boardWidth, first_y + 1, 1);
 
 	////Hien thi thong so
-	//cout << endl << "Flag : " << flag << endl;
-	//cout << "Health : " << health << endl;
-	//GotoXY(0, 0);
+	DrawFlagbox(first_x - boardWidth + (boardWidth * 3 + boardWidth + 1 + boardWidth) / 2 - 9 / 2, first_y + boardHeight + boardHeight + 1);
+	DrawHealthnum(first_x - boardWidth + (boardWidth * 3 + boardWidth + 1 + boardWidth) / 2 - 17 / 2, first_y - boardHeight);
+	ShowCur(1);
 
-	//while (1) {
-	//	int move = Move();
-	//	//enter
-	//	if (move == 2) {
-	//		if (boardMat[boardY][boardX] == 0) {
-	//			boardMat[boardY][boardX] = answerMat[boardY][boardX];
-	//			if (flag != answerMat[boardY][boardX]) {
-	//				health--;
-	//				GotoXY(0, boardHeight + maxSize + 2);
-	//				cout << "Health : " << health;
-	//			}
-	//		}
-	//		AutoMark(numsList);
-	//		GotoXY(0, 0);
-	//		DrawBoard();
-	//		GotoXY();
-	//	}
-	//	//swap
-	//	if (move == 3) {
-	//		GotoXY(0, boardHeight + maxSize + 1);
-	//		cout << "Flag :   ";
-	//		GotoXY(0, boardHeight + maxSize + 1);
-	//		cout << "Flag : " << flag;
-	//		GotoXY();
-	//	}
-	//	//back
-	//	if (move == 4)
-	//		break;
+	screenX = first_x + 2; screenY = first_y + 1;
+	boardX = boardY = 0;
 
-	//	if (health <= 0)
-	//		//play again?
-	//		return 0;
+	while (1) {
+		int jumpX = 4, jumpY = 2;
+		Display(0, 0, 50, 25);
 
-	//	if (CheckFull())
-	//		//completed!
-	//		return 2;
-	//	Sleep(5);
-	//}
+		//right
+		if ((GetAsyncKeyState(Key[0]) < 0) || (GetAsyncKeyState(Key[6]) < 0)) {
+			while ((GetAsyncKeyState(Key[0]) < 0) || (GetAsyncKeyState(Key[6]) < 0));
+
+			screenX = (boardX + 1 < boardWidth) ? (screenX + jumpX) : first_x + 2;
+			boardX = (boardX + 1 < boardWidth) ? (boardX + 1) : 0;
+			GotoXY();
+		}
+
+		//up
+		if ((GetAsyncKeyState(Key[1]) < 0) || (GetAsyncKeyState(Key[7]) < 0)) {
+			while ((GetAsyncKeyState(Key[1]) < 0) || (GetAsyncKeyState(Key[7]) < 0));
+
+			screenY = (boardY - 1 >= 0) ? (screenY - jumpY) : first_y + 1 + 2 * (boardHeight - 1);
+			boardY = (boardY - 1 >= 0) ? (boardY - 1) : boardHeight - 1;
+			GotoXY();
+		}
+
+		//left
+		if ((GetAsyncKeyState(Key[2]) < 0) || (GetAsyncKeyState(Key[8]) < 0)) {
+			while ((GetAsyncKeyState(Key[2]) < 0) || (GetAsyncKeyState(Key[8]) < 0));
+
+			screenX = (boardX - 1 >= 0) ? (screenX - jumpX) : first_x + 2 + 4 * (boardWidth - 1);
+			boardX = (boardX - 1 >= 0) ? (boardX - 1) : boardWidth - 1;
+			GotoXY();
+		}
+
+		//down
+		if ((GetAsyncKeyState(Key[3]) < 0) || (GetAsyncKeyState(Key[9]) < 0)) {
+			while ((GetAsyncKeyState(Key[3]) < 0) || (GetAsyncKeyState(Key[9]) < 0));
+
+			screenY = (boardY + 1 < boardHeight) ? (screenY + jumpY) : first_y + 1;
+			boardY = (boardY + 1 < boardHeight) ? (boardY + 1) : 0;
+			GotoXY();
+		}
+
+		//enter
+		if ((GetAsyncKeyState(Key[4]) < 0) || (GetAsyncKeyState(Key[10]) < 0)) {
+			while ((GetAsyncKeyState(Key[4]) < 0) || (GetAsyncKeyState(Key[10]) < 0));
+
+			if (boardMat[boardY][boardX] == 0) {
+				boardMat[boardY][boardX] = answerMat[boardY][boardX];
+				if (flag != answerMat[boardY][boardX]) {
+					health--;
+					DrawHealthnum(first_x - boardWidth + (boardWidth * 3 + boardWidth + 1 + boardWidth) / 2 - 17 / 2, first_y - boardHeight);
+				}
+				AutoMark(numsList);
+			}
+			DrawBoard(first_x, first_y);
+		}
+
+		//swap
+		if ((GetAsyncKeyState(Key[5]) < 0) || (GetAsyncKeyState(Key[11]) < 0)) {
+			while ((GetAsyncKeyState(Key[5]) < 0) || (GetAsyncKeyState(Key[11]) < 0));
+
+			flag *= -1;
+			DrawFlagbox(first_x - boardWidth + (boardWidth * 3 + boardWidth + 1 + boardWidth) / 2 - 9 / 2, first_y + boardHeight + boardHeight + 1);
+		}
+
+		//back
+		if (GetAsyncKeyState(Key[12]) < 0) {
+			while (GetAsyncKeyState(Key[12]) < 0);
+
+			break;
+		}
+
+		if (health <= 0)
+			//play again?
+			return 0;
+
+		if (CheckFull())
+			//completed!
+			return 2;
+	}
 	////save game
 	return 1;
 }
