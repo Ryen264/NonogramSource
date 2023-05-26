@@ -423,5 +423,6 @@ void DrawHintbox(int first_x, int first_y, int bgdColor, int txtColor, int Hints
 	DrawFrame(5, 3, first_x, first_y, 3, bgdColor, txtColor, pBuffer, pColor);
 	pBuffer[(first_y + 1) * screenWidth + first_x + 2] = L'+';
 
-	Text(to_wstring(Hints), bgdColor, txtColor, first_x + 5 - num, first_y, pBuffer, pColor);
+	wstring hintGame = to_wstring(Hints);
+	Text(hintGame, bgdColor, txtColor, first_x + 5 - hintGame.size(), first_y, pBuffer, pColor);
 }
