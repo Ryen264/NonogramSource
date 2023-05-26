@@ -60,7 +60,7 @@ void Configure() {
 	cfiex.cbSize = sizeof(CONSOLE_FONT_INFOEX);
 
 	GetCurrentConsoleFontEx(hStdout, 0, &cfiex);
-	cfiex.dwFontSize.Y = 24;
+	cfiex.dwFontSize.Y = 26;
 	SetCurrentConsoleFontEx(hStdout, 0, &cfiex);
 	//
 
@@ -129,29 +129,57 @@ void DrawObject(vector<wstring> contentsArr, int bgdColor, int txtColor, int nPo
 		Text(contentsArr[i], bgdColor, txtColor, nPosX, nPosY + i, pBuffer, pColor);
 }
 
-void DrawFrame(int width, int height, int first_x, int first_y, int line, wchar_t* pBuffer, WORD* pColor) {
+void DrawFrame(int width, int height, int first_x, int first_y, int line, int bgdColor, int txtColor, wchar_t* pBuffer, WORD* pColor) {
 	if (pBuffer == NULL)
 		pBuffer = screenBuffer;
 	if (pColor == NULL)
 		pColor = screenColor;
 
 	pBuffer[first_y * screenWidth + first_x] = Lines[line][3];
-	for (int i = first_x + 1; i < first_x + width - 1; i++)
+	if (bgdColor < 0)
+		bgdColor = pColor[first_y * screenWidth + first_x] / 16;
+	pColor[first_y * screenWidth + first_x] = bgdColor * 16 + txtColor;
+	for (int i = first_x + 1; i < first_x + width - 1; i++) {
 		pBuffer[first_y * screenWidth + i] = Lines[line][0];
+		if (bgdColor < 0)
+			bgdColor = pColor[first_y * screenWidth + i] / 16;
+		pColor[first_y * screenWidth + i] = bgdColor * 16 + txtColor;
+	}
 
 	pBuffer[first_y * screenWidth + first_x + width - 1] = Lines[line][4];
-	for (int j = first_y + 1; j < first_y + height - 1; j++)
+	if (bgdColor < 0)
+		bgdColor = pColor[first_y * screenWidth + first_x + width - 1] / 16;
+	pColor[first_y * screenWidth + first_x + width - 1] = bgdColor * 16 + txtColor;
+	for (int j = first_y + 1; j < first_y + height - 1; j++) {
 		pBuffer[j * screenWidth + first_x + width - 1] = Lines[line][1];
+		if (bgdColor < 0)
+			bgdColor = pColor[j * screenWidth + first_x + width - 1] / 16;
+		pColor[j * screenWidth + first_x + width - 1] = bgdColor * 16 + txtColor;
+	}
 
 	pBuffer[(first_y + height - 1) * screenWidth + first_x + width - 1] = Lines[line][6];
-	for (int i = first_x + 1; i < first_x + width - 1; i++)
+	if (bgdColor < 0)
+		bgdColor = pColor[(first_y + height - 1) * screenWidth + first_x + width - 1] / 16;
+	pColor[(first_y + height - 1) * screenWidth + first_x + width - 1] = bgdColor * 16 + txtColor;
+	for (int i = first_x + 1; i < first_x + width - 1; i++) {
 		pBuffer[(first_y + height - 1) * screenWidth + i] = Lines[line][0];
+		if (bgdColor < 0)
+			bgdColor = pColor[(first_y + height - 1) * screenWidth + i] / 16;
+		pColor[(first_y + height - 1) * screenWidth + i] = bgdColor * 16 + txtColor;
+	}
 
 	pBuffer[(first_y + height - 1) * screenWidth + first_x] = Lines[line][5];
-	for (int j = first_y + 1; j < first_y + height - 1; j++)
+	if (bgdColor < 0)
+		bgdColor = pColor[(first_y + height - 1) * screenWidth + first_x] / 16;
+	pColor[(first_y + height - 1) * screenWidth + first_x] = bgdColor * 16 + txtColor;
+	for (int j = first_y + 1; j < first_y + height - 1; j++) {
 		pBuffer[j * screenWidth + first_x] = Lines[line][1];
+		if (bgdColor < 0)
+			bgdColor = pColor[j * screenWidth + first_x] / 16;
+		pColor[j * screenWidth + first_x] = bgdColor * 16 + txtColor;
+	}
 }
-void DrawBoard(int first_x, int first_y, int numWidth, int numHeight, int** board, wchar_t* pBuffer, WORD* pColor, int unit) {
+void DrawBoard(int first_x, int first_y, int numWidth, int numHeight, int unit, int** board, wchar_t* pBuffer, WORD* pColor) {
 	if (board == NULL)
 		board = boardMat;
 	if (numWidth == 0)
@@ -236,8 +264,7 @@ void DrawBoard(int first_x, int first_y, int numWidth, int numHeight, int** boar
 				break;
 			}
 }
-//side up-left-down-right : 0 1 2 3
-void DrawSide(vector<vector<int>> numsList, int first_x, int first_y, int side, int numWidth, int numHeight, wchar_t* pBuffer, WORD* pColor, int unit) {
+void DrawSide(vector<vector<int>> numsList, int first_x, int first_y, int side, int numWidth, int numHeight, int unit, wchar_t* pBuffer, WORD* pColor) {
 	if (numWidth == 0)
 		numWidth = boardWidth;
 	if (numHeight == 0)
@@ -302,6 +329,7 @@ void DrawSide(vector<vector<int>> numsList, int first_x, int first_y, int side, 
 	}
 	}
 }
+
 void DrawFlagbox(int first_x, int first_y, wchar_t* pBuffer, WORD* pColor) {
 	if (pBuffer == NULL)
 		pBuffer = screenBuffer;
@@ -359,4 +387,41 @@ void DrawHealthnum(int first_x, int first_y, wchar_t* pBuffer, WORD* pColor) {
 		DrawObject(Heart, -1, 6, first_x, first_y);
 	for (int i = 0; i < 3 - health; i++, first_x += 6)
 		DrawObject(Heart, -1, 13, first_x, first_y);
+}
+void DrawBackbutton(int first_x, int first_y, int bgdColor, int txtColor, wchar_t* pBuffer, WORD* pColor) {
+	if (pBuffer == NULL)
+		pBuffer = screenBuffer;
+	if (pColor == NULL)
+		pColor = screenColor;
+
+	DrawFrame(5, 3, first_x, first_y, 3, bgdColor, txtColor, pBuffer, pColor);
+	pBuffer[(first_y + 1) * screenWidth + first_x + 2] = L'<';
+	if (bgdColor < 0)
+		bgdColor = pColor[(first_y + 1) * screenWidth + first_x + 2] / 16;
+	pColor[(first_y + 1) * screenWidth + first_x + 2] = bgdColor * 16 + txtColor;
+}
+void DrawOptionsbutton(int first_x, int first_y, int bgdColor, int txtColor, wchar_t* pBuffer, WORD* pColor) {
+	if (pBuffer == NULL)
+		pBuffer = screenBuffer;
+	if (pColor == NULL)
+		pColor = screenColor;
+
+	DrawFrame(5, 3, first_x, first_y, 3, bgdColor, txtColor, pBuffer, pColor);
+	pBuffer[(first_y + 1) * screenWidth + first_x + 2] = L'?';
+	if (bgdColor < 0)
+		bgdColor = pColor[(first_y + 1) * screenWidth + first_x + 2] / 16;
+	pColor[(first_y + 1) * screenWidth + first_x + 2] = bgdColor * 16 + txtColor;
+}
+void DrawHintbox(int first_x, int first_y, int bgdColor, int txtColor, int Hints, wchar_t* pBuffer, WORD* pColor) {
+	if (pBuffer == NULL)
+		pBuffer = screenBuffer;
+	if (pColor == NULL)
+		pColor = screenColor;
+	if (Hints < 0)
+		Hints = hint;
+	
+	DrawFrame(5, 3, first_x, first_y, 3, bgdColor, txtColor, pBuffer, pColor);
+	pBuffer[(first_y + 1) * screenWidth + first_x + 2] = L'+';
+
+	Text(to_wstring(Hints), bgdColor, txtColor, first_x + 5 - num, first_y, pBuffer, pColor);
 }

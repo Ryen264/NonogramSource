@@ -6,7 +6,7 @@ wchar_t* screenBuffer = new wchar_t[screenWidth * screenHeight];
 int screenX, screenY;
 
 int boardHeight, boardWidth;
-int boardX, boardY, flag, health;
+int boardX, boardY, flag, health, hint;
 int** boardMat;
 
 int gameList[12 * 31] = { 0 };
