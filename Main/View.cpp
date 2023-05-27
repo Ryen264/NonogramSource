@@ -30,12 +30,12 @@ void Configure() {
 	csbiex.ColorTable[3 ] = RGB(0  , 100, 0  );	//dark green
 	csbiex.ColorTable[4 ] = RGB(139, 69 , 19 );	//saddle brown (nau dam)
 	csbiex.ColorTable[5 ] = RGB(205, 133, 63 );	//peru (nau nhat)
-	csbiex.ColorTable[6 ] = RGB(139, 0  , 0  );	//dark red
+	csbiex.ColorTable[6 ] = RGB(255, 25 , 25 );	//red
 	csbiex.ColorTable[7 ] = RGB(255, 165, 0  );	//orange
 	csbiex.ColorTable[8 ] = RGB(148, 0  , 211);	//dark violet
 	csbiex.ColorTable[9 ] = RGB(255, 99 , 71 );	//tomato
 	csbiex.ColorTable[10] = RGB(255, 128, 0  );	//orange (fox)
-	csbiex.ColorTable[11] = RGB(60 , 179, 113);	//medium sea green
+	csbiex.ColorTable[11] = RGB(0  , 0  , 179);	//zaffre
 	csbiex.ColorTable[12] = RGB(144, 238, 144);	//light green (xanh la nhat)
 	csbiex.ColorTable[13] = RGB(149, 156, 176);	//con chon xanh binh thuong
 	csbiex.ColorTable[14] = RGB(105, 115, 143);	//con chon xanh dam nhat
@@ -94,91 +94,42 @@ void Display(int fromX, int fromY, int toX, int toY, wchar_t* pBuffer, WORD* pCo
 			WriteConsoleOutputCharacter(hStdout, &pBuffer[j * screenWidth + i], 1, cPos, &dwBytesWritten);
 		}
 }
-void ClearScreen(int bgdColor, int txtColor, wchar_t* pBuffer, WORD* pColor) {
+void SetBufferColor(int x, int y, wchar_t LChar, int txtColor, int bgdColor, wchar_t*& pBuffer, WORD*& pColor) {
+	pBuffer[y * screenWidth + x] = LChar;
+	if (bgdColor < 0)
+		bgdColor = pColor[y * screenWidth + x] / 16;
+	pColor[y * screenWidth + x] = bgdColor * 16 + txtColor;
+}
+
+void ClearScreen(int txtColor, int bgdColor, wchar_t* pBuffer, WORD* pColor) {
 	if (pBuffer == NULL)
 		pBuffer = screenBuffer;
 	if (pColor == NULL)
 		pColor = screenColor;
 
 	for (int i = 0; i < screenWidth; i++)
-		for (int j = 0; j < screenHeight; j++) {
-			pBuffer[j * screenWidth + i] = L' ';
-			pColor[j * screenWidth + i] = bgdColor * 16 + txtColor;
-		}
+		for (int j = 0; j < screenHeight; j++)
+			SetBufferColor(i, j, L' ', txtColor, bgdColor, pBuffer, pColor);
 }
-void Text(wstring wsContent, int bgdColor, int txtColor, int nPosX, int nPosY, wchar_t* pBuffer, WORD* pColor) {
+void Text(wstring wsContent, int first_x, int first_y, int txtColor, int bgdColor, wchar_t* pBuffer, WORD* pColor) {
 	if (pBuffer == NULL)
 		pBuffer = screenBuffer;
 	if (pColor == NULL)
 		pColor = screenColor;
 
-	for (int i = 0; i < wsContent.length(); i++, nPosX++) {
-		WORD wColor = (bgdColor >= 0) ? (bgdColor * 16 + txtColor) : ((pColor[nPosY * screenWidth + nPosX] / 16) * 16 + txtColor);
-		pBuffer[nPosY * screenWidth + nPosX] = wsContent[i];
-		if (pBuffer[nPosY * screenWidth + nPosX] != ' ')
-			pColor[nPosY * screenWidth + nPosX] = wColor;
-	}
+	for (int i = 0; i < wsContent.length(); i++, first_x++)
+		SetBufferColor(first_x, first_y, wsContent[i], txtColor, bgdColor, pBuffer, pColor);
 }
-void DrawObject(vector<wstring> contentsArr, int bgdColor, int txtColor, int nPosX, int nPosY, wchar_t* pBuffer, WORD* pColor) {
+void DrawObject(vector<wstring> contentsArr, int first_x, int first_y, int txtColor, int bgdColor, wchar_t* pBuffer, WORD* pColor) {
 	if (pBuffer == NULL)
 		pBuffer = screenBuffer;
 	if (pColor == NULL)
 		pColor = screenColor;
 
 	for (int i = 0; i < contentsArr.size(); i++)
-		Text(contentsArr[i], bgdColor, txtColor, nPosX, nPosY + i, pBuffer, pColor);
+		Text(contentsArr[i], first_x, first_y + i, txtColor, bgdColor, pBuffer, pColor);
 }
 
-void DrawFrame(int width, int height, int first_x, int first_y, int line, int bgdColor, int txtColor, wchar_t* pBuffer, WORD* pColor) {
-	if (pBuffer == NULL)
-		pBuffer = screenBuffer;
-	if (pColor == NULL)
-		pColor = screenColor;
-
-	pBuffer[first_y * screenWidth + first_x] = Lines[line][3];
-	if (bgdColor < 0)
-		bgdColor = pColor[first_y * screenWidth + first_x] / 16;
-	pColor[first_y * screenWidth + first_x] = bgdColor * 16 + txtColor;
-	for (int i = first_x + 1; i < first_x + width - 1; i++) {
-		pBuffer[first_y * screenWidth + i] = Lines[line][0];
-		if (bgdColor < 0)
-			bgdColor = pColor[first_y * screenWidth + i] / 16;
-		pColor[first_y * screenWidth + i] = bgdColor * 16 + txtColor;
-	}
-
-	pBuffer[first_y * screenWidth + first_x + width - 1] = Lines[line][4];
-	if (bgdColor < 0)
-		bgdColor = pColor[first_y * screenWidth + first_x + width - 1] / 16;
-	pColor[first_y * screenWidth + first_x + width - 1] = bgdColor * 16 + txtColor;
-	for (int j = first_y + 1; j < first_y + height - 1; j++) {
-		pBuffer[j * screenWidth + first_x + width - 1] = Lines[line][1];
-		if (bgdColor < 0)
-			bgdColor = pColor[j * screenWidth + first_x + width - 1] / 16;
-		pColor[j * screenWidth + first_x + width - 1] = bgdColor * 16 + txtColor;
-	}
-
-	pBuffer[(first_y + height - 1) * screenWidth + first_x + width - 1] = Lines[line][6];
-	if (bgdColor < 0)
-		bgdColor = pColor[(first_y + height - 1) * screenWidth + first_x + width - 1] / 16;
-	pColor[(first_y + height - 1) * screenWidth + first_x + width - 1] = bgdColor * 16 + txtColor;
-	for (int i = first_x + 1; i < first_x + width - 1; i++) {
-		pBuffer[(first_y + height - 1) * screenWidth + i] = Lines[line][0];
-		if (bgdColor < 0)
-			bgdColor = pColor[(first_y + height - 1) * screenWidth + i] / 16;
-		pColor[(first_y + height - 1) * screenWidth + i] = bgdColor * 16 + txtColor;
-	}
-
-	pBuffer[(first_y + height - 1) * screenWidth + first_x] = Lines[line][5];
-	if (bgdColor < 0)
-		bgdColor = pColor[(first_y + height - 1) * screenWidth + first_x] / 16;
-	pColor[(first_y + height - 1) * screenWidth + first_x] = bgdColor * 16 + txtColor;
-	for (int j = first_y + 1; j < first_y + height - 1; j++) {
-		pBuffer[j * screenWidth + first_x] = Lines[line][1];
-		if (bgdColor < 0)
-			bgdColor = pColor[j * screenWidth + first_x] / 16;
-		pColor[j * screenWidth + first_x] = bgdColor * 16 + txtColor;
-	}
-}
 void DrawBoard(int first_x, int first_y, int numWidth, int numHeight, int unit, int** board, wchar_t* pBuffer, WORD* pColor) {
 	if (board == NULL)
 		board = boardMat;
@@ -330,52 +281,27 @@ void DrawSide(vector<vector<int>> numsList, int first_x, int first_y, int side, 
 	}
 }
 
-void DrawFlagbox(int first_x, int first_y, wchar_t* pBuffer, WORD* pColor) {
+void DrawFrame(int width, int height, int first_x, int first_y, int line, int txtColor, int bgdColor, wchar_t* pBuffer, WORD* pColor) {
 	if (pBuffer == NULL)
 		pBuffer = screenBuffer;
 	if (pColor == NULL)
 		pColor = screenColor;
 
-	pBuffer[(first_y + 1) * screenWidth + first_x + 2] = L'Χ';
+	SetBufferColor(first_x, first_y, Lines[line][3], txtColor, bgdColor, pBuffer, pColor);
+	for (int i = first_x + 1; i < first_x + width - 1; i++)
+		SetBufferColor(i, first_y, Lines[line][0], txtColor, bgdColor, pBuffer, pColor);
 
-	pBuffer[(first_y + 1) * screenWidth + first_x + 5] = L'▐';
-	pBuffer[(first_y + 1) * screenWidth + first_x + 6] = L'█';
-	pBuffer[(first_y + 1) * screenWidth + first_x + 7] = L'▌';
+	SetBufferColor(first_x + width - 1, first_y, Lines[line][4], txtColor, bgdColor, pBuffer, pColor);
+	for (int j = first_y + 1; j < first_y + height - 1; j++)
+		SetBufferColor(first_x + width - 1, j, Lines[line][1], txtColor, bgdColor, pBuffer, pColor);
 
-	if (flag == 1) {
-		pBuffer[first_y * screenWidth + first_x] = L' ';
-		pBuffer[first_y * screenWidth + first_x + 1] = pBuffer[first_y * screenWidth + first_x + 2] = pBuffer[first_y * screenWidth + first_x + 3] = L' ';
-		pBuffer[first_y * screenWidth + first_x + 4] = L' ';
-		pBuffer[(first_y + 1) * screenWidth + first_x] = pBuffer[(first_y + 1) * screenWidth + first_x + 4] = L' ';
-		pBuffer[(first_y + 2) * screenWidth + first_x] = L' ';
-		pBuffer[(first_y + 2) * screenWidth + first_x + 1] = pBuffer[(first_y + 2) * screenWidth + first_x + 2] = pBuffer[(first_y + 2) * screenWidth + first_x + 3] = L' ';
-		pBuffer[(first_y + 2) * screenWidth + first_x + 4] = L' ';
+	SetBufferColor(first_x + width - 1, first_y + height - 1, Lines[line][6], txtColor, bgdColor, pBuffer, pColor);
+	for (int i = first_x + 1; i < first_x + width - 1; i++)
+		SetBufferColor(i, first_y + height - 1, Lines[line][0], txtColor, bgdColor, pBuffer, pColor);
 
-		pBuffer[first_y * screenWidth + first_x + 4] = L'╭';
-		pBuffer[first_y * screenWidth + first_x + 5] = pBuffer[first_y * screenWidth + first_x + 6] = pBuffer[first_y * screenWidth + first_x + 7] = L'─';
-		pBuffer[first_y * screenWidth + first_x + 8] = L'╮';
-		pBuffer[(first_y + 1) * screenWidth + first_x + 4] = pBuffer[(first_y + 1) * screenWidth + first_x + 8] = L'│';
-		pBuffer[(first_y + 2) * screenWidth + first_x + 4] = L'╰';
-		pBuffer[(first_y + 2) * screenWidth + first_x + 5] = pBuffer[(first_y + 2) * screenWidth + first_x + 6] = pBuffer[(first_y + 2) * screenWidth + first_x + 7] = L'─';
-		pBuffer[(first_y + 2) * screenWidth + first_x + 8] = L'╯';
-	}
-	else {
-		pBuffer[first_y * screenWidth + first_x + 4] = L' ';
-		pBuffer[first_y * screenWidth + first_x + 5] = pBuffer[first_y * screenWidth + first_x + 6] = pBuffer[first_y * screenWidth + first_x + 7] = L' ';
-		pBuffer[first_y * screenWidth + first_x + 8] = L' ';
-		pBuffer[(first_y + 1) * screenWidth + first_x + 4] = pBuffer[(first_y + 1) * screenWidth + first_x + 8] = L' ';
-		pBuffer[(first_y + 2) * screenWidth + first_x + 4] = L' ';
-		pBuffer[(first_y + 2) * screenWidth + first_x + 5] = pBuffer[(first_y + 2) * screenWidth + first_x + 6] = pBuffer[(first_y + 2) * screenWidth + first_x + 7] = L' ';
-		pBuffer[(first_y + 2) * screenWidth + first_x + 8] = L' ';
-
-		pBuffer[first_y * screenWidth + first_x] = L'╭';
-		pBuffer[first_y * screenWidth + first_x + 1] = pBuffer[first_y * screenWidth + first_x + 2] = pBuffer[first_y * screenWidth + first_x + 3] = L'─';
-		pBuffer[first_y * screenWidth + first_x + 4] = L'╮';
-		pBuffer[(first_y + 1) * screenWidth + first_x] = pBuffer[(first_y + 1) * screenWidth + first_x + 4] = L'│';
-		pBuffer[(first_y + 2) * screenWidth + first_x] = L'╰';
-		pBuffer[(first_y + 2) * screenWidth + first_x + 1] = pBuffer[(first_y + 2) * screenWidth + first_x + 2] = pBuffer[(first_y + 2) * screenWidth + first_x + 3] = L'─';
-		pBuffer[(first_y + 2) * screenWidth + first_x + 4] = L'╯';
-	}
+	SetBufferColor(first_x, first_y + height - 1, Lines[line][5], txtColor, bgdColor, pBuffer, pColor);
+	for (int j = first_y + 1; j < first_y + height - 1; j++)
+		SetBufferColor(first_x, j, Lines[line][1], txtColor, bgdColor, pBuffer, pColor);
 }
 void DrawHealthnum(int first_x, int first_y, wchar_t* pBuffer, WORD* pColor) {
 	if (pBuffer == NULL)
@@ -384,45 +310,211 @@ void DrawHealthnum(int first_x, int first_y, wchar_t* pBuffer, WORD* pColor) {
 		pColor = screenColor;
 
 	for (int i = 0; i < health; i++, first_x += 6)
-		DrawObject(Heart, -1, 6, first_x, first_y);
+		DrawObject(Heart, 6, -1, first_x, first_y);
 	for (int i = 0; i < 3 - health; i++, first_x += 6)
-		DrawObject(Heart, -1, 13, first_x, first_y);
+		DrawObject(Heart, 13, -1, first_x, first_y);
 }
-void DrawBackbutton(int first_x, int first_y, int bgdColor, int txtColor, wchar_t* pBuffer, WORD* pColor) {
+
+void DrawFlagbox(int first_x, int first_y, int txtColor, int bgdColor, int Flag, wchar_t* pBuffer, WORD* pColor) {
 	if (pBuffer == NULL)
 		pBuffer = screenBuffer;
 	if (pColor == NULL)
 		pColor = screenColor;
+	if (Flag == 0)
+		Flag = flag;
 
-	DrawFrame(5, 3, first_x, first_y, 3, bgdColor, txtColor, pBuffer, pColor);
-	pBuffer[(first_y + 1) * screenWidth + first_x + 2] = L'<';
-	if (bgdColor < 0)
-		bgdColor = pColor[(first_y + 1) * screenWidth + first_x + 2] / 16;
-	pColor[(first_y + 1) * screenWidth + first_x + 2] = bgdColor * 16 + txtColor;
-}
-void DrawOptionsbutton(int first_x, int first_y, int bgdColor, int txtColor, wchar_t* pBuffer, WORD* pColor) {
-	if (pBuffer == NULL)
-		pBuffer = screenBuffer;
-	if (pColor == NULL)
-		pColor = screenColor;
+	if (Flag == 1) {
+		for (int i = 0; i < 5; i++)
+			for (int j = 0; j < 3; j++)
+				SetBufferColor(first_x + i, first_y + j, L' ', 0, bgdColor, pBuffer, pColor);
+		SetBufferColor(first_x + 2, first_y + 1, L'X', 0, bgdColor, pBuffer, pColor);
 
-	DrawFrame(5, 3, first_x, first_y, 3, bgdColor, txtColor, pBuffer, pColor);
-	pBuffer[(first_y + 1) * screenWidth + first_x + 2] = L'?';
-	if (bgdColor < 0)
-		bgdColor = pColor[(first_y + 1) * screenWidth + first_x + 2] / 16;
-	pColor[(first_y + 1) * screenWidth + first_x + 2] = bgdColor * 16 + txtColor;
+
+		for (int i = 1; i < 4; i++) {
+			SetBufferColor(first_x + 4 + i, first_y, L'─', txtColor, bgdColor, pBuffer, pColor);
+			SetBufferColor(first_x + 4 + i, first_y + 2, L'─', txtColor, bgdColor, pBuffer, pColor);
+		}
+		SetBufferColor(first_x + 4, first_y + 1, L'│', txtColor, bgdColor, pBuffer, pColor);
+		SetBufferColor(first_x + 8, first_y + 1, L'│', txtColor, bgdColor, pBuffer, pColor);
+
+		SetBufferColor(first_x + 4, first_y, L'╭', txtColor, bgdColor, pBuffer, pColor);
+		SetBufferColor(first_x + 8, first_y, L'╮', txtColor, bgdColor, pBuffer, pColor);
+		SetBufferColor(first_x + 4, first_y + 2, L'╰', txtColor, bgdColor, pBuffer, pColor);
+		SetBufferColor(first_x + 8, first_y + 2, L'╯', txtColor, bgdColor, pBuffer, pColor);
+
+		SetBufferColor(first_x + 5, first_y + 1, L'▐', txtColor, bgdColor, pBuffer, pColor);
+		SetBufferColor(first_x + 6, first_y + 1, L'█', txtColor, bgdColor, pBuffer, pColor);
+		SetBufferColor(first_x + 7, first_y + 1, L'▌', txtColor, bgdColor, pBuffer, pColor);
+	}
+	else {
+		for (int i = 0; i < 5; i++)
+			for (int j = 0; j < 3; j++)
+				SetBufferColor(first_x + 4 + i, first_y + j, L' ', 0, bgdColor, pBuffer, pColor);
+		SetBufferColor(first_x + 5, first_y + 1, L'▐', 0, bgdColor, pBuffer, pColor);
+		SetBufferColor(first_x + 6, first_y + 1, L'█', 0, bgdColor, pBuffer, pColor);
+		SetBufferColor(first_x + 7, first_y + 1, L'▌', 0, bgdColor, pBuffer, pColor);
+
+
+		for (int i = 1; i < 4; i++) {
+			SetBufferColor(first_x + i, first_y, L'─', txtColor, bgdColor, pBuffer, pColor);
+			SetBufferColor(first_x + i, first_y + 2, L'─', txtColor, bgdColor, pBuffer, pColor);
+		}
+		SetBufferColor(first_x, first_y + 1, L'│', txtColor, bgdColor, pBuffer, pColor);
+		SetBufferColor(first_x + 4, first_y + 1, L'│', txtColor, bgdColor, pBuffer, pColor);
+
+		SetBufferColor(first_x, first_y, L'╭', txtColor, bgdColor, pBuffer, pColor);
+		SetBufferColor(first_x + 4, first_y, L'╮', txtColor, bgdColor, pBuffer, pColor);
+		SetBufferColor(first_x, first_y + 2, L'╰', txtColor, bgdColor, pBuffer, pColor);
+		SetBufferColor(first_x + 4, first_y + 2, L'╯', txtColor, bgdColor, pBuffer, pColor);
+
+		SetBufferColor(first_x + 2, first_y + 1, L'X', txtColor, bgdColor, pBuffer, pColor);
+	}
 }
-void DrawHintbox(int first_x, int first_y, int bgdColor, int txtColor, int Hints, wchar_t* pBuffer, WORD* pColor) {
+void DrawHintbox(int first_x, int first_y, int txtColor, int bgdColor, int Hints, wchar_t* pBuffer, WORD* pColor) {
 	if (pBuffer == NULL)
 		pBuffer = screenBuffer;
 	if (pColor == NULL)
 		pColor = screenColor;
 	if (Hints < 0)
 		Hints = hint;
-	
-	DrawFrame(5, 3, first_x, first_y, 3, bgdColor, txtColor, pBuffer, pColor);
-	pBuffer[(first_y + 1) * screenWidth + first_x + 2] = L'+';
+
+	DrawFrame(5, 3, first_x, first_y, 3, txtColor, bgdColor, pBuffer, pColor);
+	SetBufferColor(first_x + 2, first_y + 1, L'+', txtColor, bgdColor, pBuffer, pColor);
 
 	wstring hintGame = to_wstring(Hints);
-	Text(hintGame, bgdColor, txtColor, first_x + 5 - hintGame.size(), first_y, pBuffer, pColor);
+	Text(hintGame, first_x + 5 - hintGame.size(), first_y, txtColor, bgdColor, pBuffer, pColor);
+}
+
+void DrawBackbutton(int txtColor, int bgdColor, int first_x, int first_y, wchar_t* pBuffer, WORD* pColor) {
+	if (pBuffer == NULL)
+		pBuffer = screenBuffer;
+	if (pColor == NULL)
+		pColor = screenColor;
+
+	DrawFrame(5, 3, first_x, first_y, 3, txtColor, bgdColor, pBuffer, pColor);
+	SetBufferColor(first_x + 2, first_y + 1, L'<', txtColor, bgdColor, pBuffer, pColor);
+}
+void DrawOptionsbutton(int txtColor, int bgdColor, int first_x, int first_y, wchar_t* pBuffer, WORD* pColor) {
+	if (pBuffer == NULL)
+		pBuffer = screenBuffer;
+	if (pColor == NULL)
+		pColor = screenColor;
+
+	DrawFrame(5, 3, first_x, first_y, 3, txtColor, bgdColor, pBuffer, pColor);
+	SetBufferColor(first_x + 2, first_y + 1, L'?', txtColor, bgdColor, pBuffer, pColor);
+}
+
+void DrawMonthYear(int month, int year, int first_x, int first_y, int txtColor, int bgdColor, wchar_t* pBuffer, WORD* pColor) {
+	if (pBuffer == NULL)
+		pBuffer = screenBuffer;
+	if (pColor == NULL)
+		pColor = screenColor;
+	string strYear = to_string(year);
+
+	switch (month) {
+	case 1:
+		DrawObject(Alphabet3pixels['J' - 'A'], first_x, first_y, txtColor, bgdColor, pBuffer, pColor);
+		DrawObject(Alphabet3pixels['A' - 'A'], first_x + 4, first_y, txtColor, bgdColor, pBuffer, pColor);
+		DrawObject(Alphabet3pixels['N' - 'A'], first_x + 8, first_y, txtColor, bgdColor, pBuffer, pColor);
+
+		for (int i = 0; i < strYear.size(); i++)
+			DrawObject(Number3pixels[strYear[i] - '0'], first_x + 16 + i * 4, first_y, txtColor, bgdColor, pBuffer, pColor);
+		break;
+	case 2:
+		DrawObject(Alphabet3pixels['F' - 'A'], first_x + 1, first_y, txtColor, bgdColor, pBuffer, pColor);
+		DrawObject(Alphabet3pixels['E' - 'A'], first_x + 5, first_y, txtColor, bgdColor, pBuffer, pColor);
+		DrawObject(Alphabet3pixels['B' - 'A'], first_x + 9, first_y, txtColor, bgdColor, pBuffer, pColor);
+
+		for (int i = 0; i < strYear.size(); i++)
+			DrawObject(Number3pixels[strYear[i] - '0'], first_x + 15 + i * 4, first_y, txtColor, bgdColor, pBuffer, pColor);
+		break;
+	case 3:
+		DrawObject(Alphabet3pixels['M' - 'A'], first_x, first_y, txtColor, bgdColor, pBuffer, pColor);
+		DrawObject(Alphabet3pixels['A' - 'A'], first_x + 6, first_y, txtColor, bgdColor, pBuffer, pColor);
+		DrawObject(Alphabet3pixels['R' - 'A'], first_x + 10, first_y, txtColor, bgdColor, pBuffer, pColor);
+
+		for (int i = 0; i < strYear.size(); i++)
+			DrawObject(Number3pixels[strYear[i] - '0'], first_x + 16 + i * 4, first_y, txtColor, bgdColor, pBuffer, pColor);
+		break;
+	case 4:
+		DrawObject(Alphabet3pixels['A' - 'A'], first_x + 1, first_y, txtColor, bgdColor, pBuffer, pColor);
+		DrawObject(Alphabet3pixels['P' - 'A'], first_x + 5, first_y, txtColor, bgdColor, pBuffer, pColor);
+		DrawObject(Alphabet3pixels['R' - 'A'], first_x + 9, first_y, txtColor, bgdColor, pBuffer, pColor);
+
+		for (int i = 0; i < strYear.size(); i++)
+			DrawObject(Number3pixels[strYear[i] - '0'], first_x + 15 + i * 4, first_y, txtColor, bgdColor, pBuffer, pColor);
+		break;
+	case 5:
+		DrawObject(Alphabet3pixels['M' - 'A'], first_x, first_y, txtColor, bgdColor, pBuffer, pColor);
+		DrawObject(Alphabet3pixels['A' - 'A'], first_x + 6, first_y, txtColor, bgdColor, pBuffer, pColor);
+		DrawObject(Alphabet3pixels['Y' - 'A'], first_x + 10, first_y, txtColor, bgdColor, pBuffer, pColor);
+
+		for (int i = 0; i < strYear.size(); i++)
+			DrawObject(Number3pixels[strYear[i] - '0'], first_x + 16 + i * 4, first_y, txtColor, bgdColor, pBuffer, pColor);
+		break;
+	case 6:
+		DrawObject(Alphabet3pixels['J' - 'A'], first_x, first_y, txtColor, bgdColor, pBuffer, pColor);
+		DrawObject(Alphabet3pixels['U' - 'A'], first_x + 4, first_y, txtColor, bgdColor, pBuffer, pColor);
+		DrawObject(Alphabet3pixels['N' - 'A'], first_x + 8, first_y, txtColor, bgdColor, pBuffer, pColor);
+
+		for (int i = 0; i < strYear.size(); i++)
+			DrawObject(Number3pixels[strYear[i] - '0'], first_x + 16 + i * 4, first_y, txtColor, bgdColor, pBuffer, pColor);
+		break;
+	case 7:
+		DrawObject(Alphabet3pixels['J' - 'A'], first_x + 1, first_y, txtColor, bgdColor, pBuffer, pColor);
+		DrawObject(Alphabet3pixels['U' - 'A'], first_x + 5, first_y, txtColor, bgdColor, pBuffer, pColor);
+		DrawObject(Alphabet3pixels['L' - 'A'], first_x + 9, first_y, txtColor, bgdColor, pBuffer, pColor);
+
+		for (int i = 0; i < strYear.size(); i++)
+			DrawObject(Number3pixels[strYear[i] - '0'], first_x + 15 + i * 4, first_y, txtColor, bgdColor, pBuffer, pColor);
+		break;
+	case 8:
+		DrawObject(Alphabet3pixels['A' - 'A'], first_x + 1, first_y, txtColor, bgdColor, pBuffer, pColor);
+		DrawObject(Alphabet3pixels['U' - 'A'], first_x + 5, first_y, txtColor, bgdColor, pBuffer, pColor);
+		DrawObject(Alphabet3pixels['G' - 'A'], first_x + 9, first_y, txtColor, bgdColor, pBuffer, pColor);
+
+		for (int i = 0; i < strYear.size(); i++)
+			DrawObject(Number3pixels[strYear[i] - '0'], first_x + 15 + i * 4, first_y, txtColor, bgdColor, pBuffer, pColor);
+		break;
+	case 9:
+		DrawObject(Alphabet3pixels['S' - 'A'], first_x + 1, first_y, txtColor, bgdColor, pBuffer, pColor);
+		DrawObject(Alphabet3pixels['E' - 'A'], first_x + 5, first_y, txtColor, bgdColor, pBuffer, pColor);
+		DrawObject(Alphabet3pixels['P' - 'A'], first_x + 9, first_y, txtColor, bgdColor, pBuffer, pColor);
+
+		for (int i = 0; i < strYear.size(); i++)
+			DrawObject(Number3pixels[strYear[i] - '0'], first_x + 15 + i * 4, first_y, txtColor, bgdColor, pBuffer, pColor);
+		break;
+	case 10:
+		DrawObject(Alphabet3pixels['O' - 'A'], first_x + 1, first_y, txtColor, bgdColor, pBuffer, pColor);
+		DrawObject(Alphabet3pixels['C' - 'A'], first_x + 5, first_y, txtColor, bgdColor, pBuffer, pColor);
+		DrawObject(Alphabet3pixels['T' - 'A'], first_x + 9, first_y, txtColor, bgdColor, pBuffer, pColor);
+
+		for (int i = 0; i < strYear.size(); i++)
+			DrawObject(Number3pixels[strYear[i] - '0'], first_x + 15 + i * 4, first_y, txtColor, bgdColor, pBuffer, pColor);
+		break;
+	case 11:
+		DrawObject(Alphabet3pixels['N' - 'A'], first_x, first_y, txtColor, bgdColor, pBuffer, pColor);
+		DrawObject(Alphabet3pixels['O' - 'A'], first_x + 6, first_y, txtColor, bgdColor, pBuffer, pColor);
+		DrawObject(Alphabet3pixels['V' - 'A'], first_x + 10, first_y, txtColor, bgdColor, pBuffer, pColor);
+
+		for (int i = 0; i < strYear.size(); i++)
+			DrawObject(Number3pixels[strYear[i] - '0'], first_x + 16 + i * 4, first_y, txtColor, bgdColor, pBuffer, pColor);
+		break;
+	case 12:
+		DrawObject(Alphabet3pixels['D' - 'A'], first_x + 1, first_y, txtColor, bgdColor, pBuffer, pColor);
+		DrawObject(Alphabet3pixels['E' - 'A'], first_x + 5, first_y, txtColor, bgdColor, pBuffer, pColor);
+		DrawObject(Alphabet3pixels['C' - 'A'], first_x + 9, first_y, txtColor, bgdColor, pBuffer, pColor);
+
+		for (int i = 0; i < strYear.size(); i++)
+			DrawObject(Number3pixels[strYear[i] - '0'], first_x + 15 + i * 4, first_y, txtColor, bgdColor, pBuffer, pColor);
+		break;
+	}
+}
+void DrawSingleMode() {
+	DrawBackbutton();
+	DrawOptionsbutton();
+	DrawObject(SingleMode, 3, -1, screenWidth / 2 - SingleMode[0].size() / 2, 0);
+
+	//32/2
+	//DrawMonthYear
 }

@@ -130,31 +130,31 @@ int Single(int idGame) {
 		//load data board, flag, health, boardX, boardY, screenX, screenY
 
 	wstring nameGame = L"TEST GAME";
-	Text(nameGame, -1, 0, screenWidth / 2 - nameGame.size() / 2, 1);
+	Text(nameGame, screenWidth / 2 - nameGame.size() / 2, 1, 0, -1);
 	wstring levelGame = L"easy";
 	if (levelGame.size() < 6)
 		levelGame = L' ' + levelGame + L' ';
-	Text(levelGame, -1, 13, screenWidth / 2 - levelGame.size() / 2, 2);
-	DrawBackbutton();
-	DrawOptionsbutton();
+	Text(levelGame, screenWidth / 2 - levelGame.size() / 2, 2, 13, -1);
 
-	DrawHealthnum(screenWidth / 2 - 17 / 2, 3);
-	DrawFlagbox(screenWidth / 2 - 9 / 2, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 8);
-	
-	hint = 26;
-	DrawHintbox(screenWidth / 2 + (3 * boardWidth * unit + boardWidth + 1) / 2 + 3, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 8);
-
-	//Ve ban choi
 	DrawBoard(screenWidth / 2 - (3 * boardWidth * unit + boardWidth + 1) / 2, (boardHeight + 1) / 2 + 7);
 	DrawSide(numsList, screenWidth / 2 - (3 * boardWidth * unit + boardWidth + 1) / 2 + 2, 7, 0);
 	DrawSide(numsList, screenWidth / 2 - (3 * boardWidth * unit + boardWidth + 1) / 2 - boardWidth, (boardHeight + 1) / 2 + 8, 1);
+	DrawHealthnum(screenWidth / 2 - 17 / 2, 3);
 
+	DrawFlagbox(screenWidth / 2 - 9 / 2, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 8);
+	DrawHintbox(screenWidth / 2 + (3 * boardWidth * unit + boardWidth + 1) / 2 + 3, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 8);
+
+	DrawBackbutton();
+	DrawOptionsbutton();
 
 	screenX = screenWidth / 2 - (3 * boardWidth * unit + boardWidth + 1) / 2 + 2; screenY = (boardHeight + 1) / 2 + 7 + 1;
 	boardX = boardY = 0;
-	ShowCur(1);
 	GotoXY();
+
+	ShowCur(1);
 	Display();
+
+	int BaOp = 0, FlHi = 0;
 
 	while (1) {
 		int jumpX = unit * 3 + 1, jumpY = unit + 1;
@@ -163,47 +163,247 @@ int Single(int idGame) {
 		if ((GetAsyncKeyState(Key[0]) < 0) || (GetAsyncKeyState(Key[6]) < 0)) {
 			while ((GetAsyncKeyState(Key[0]) < 0) || (GetAsyncKeyState(Key[6]) < 0));
 
-			screenX = (boardX + 1 < boardWidth) ? (screenX + jumpX) : screenWidth / 2 - (3 * boardWidth * unit + boardWidth + 1) / 2 + 2;
-			boardX = (boardX + 1 < boardWidth) ? (boardX + 1) : 0;
-			GotoXY();
-			Display(screenWidth / 2 - (3 * boardWidth * unit + boardWidth + 1) / 2, (boardHeight + 1) / 2 + 7, screenWidth / 2 + (3 * boardWidth * unit + boardWidth + 1) / 2, (boardHeight + 1) / 2 + 7 + boardHeight * unit + boardHeight + 1);
+			if (BaOp != 0) {
+				FlHi = 0;
+
+				BaOp *= -1;
+				if (BaOp == 1) {
+					DrawBackbutton(6);
+					DrawOptionsbutton();
+				}
+				else {
+					DrawBackbutton();
+					DrawOptionsbutton(6);
+				}
+				Display(0, 0, 4, 2);
+				Display(screenWidth - 5, 0, screenWidth - 1, 2);
+			} else if (FlHi != 0) {
+				BaOp = 0;
+
+				FlHi++;
+				if (FlHi >= 4)
+					FlHi = 1;
+
+				if (FlHi == 1)
+					flag = 1;
+				else if (FlHi == 3)
+					flag = -1;
+				//else Hint
+
+				if (FlHi == 1 || FlHi == 3) {
+					DrawFlagbox(screenWidth / 2 - 9 / 2, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 8, 6);
+					DrawHintbox(screenWidth / 2 + (3 * boardWidth * unit + boardWidth + 1) / 2 + 3, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 8);
+				}
+				else {
+					DrawFlagbox(screenWidth / 2 - 9 / 2, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 8);
+					DrawHintbox(screenWidth / 2 + (3 * boardWidth * unit + boardWidth + 1) / 2 + 3, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 8, 6);
+				}
+				Display(screenWidth / 2 - 9 / 2, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 8, screenWidth / 2 + (3 * boardWidth * unit + boardWidth + 1) / 2 + 8, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 11);
+			} else {
+				screenX = (boardX + 1 < boardWidth) ? (screenX + jumpX) : screenWidth / 2 - (3 * boardWidth * unit + boardWidth + 1) / 2 + 2;
+				boardX = (boardX + 1 < boardWidth) ? (boardX + 1) : 0;
+				GotoXY();
+				Display(screenWidth / 2 - (3 * boardWidth * unit + boardWidth + 1) / 2, (boardHeight + 1) / 2 + 7, screenWidth / 2 + (3 * boardWidth * unit + boardWidth + 1) / 2, (boardHeight + 1) / 2 + 7 + boardHeight * unit + boardHeight + 1);
+			}
 		}
 
 		//up
 		if ((GetAsyncKeyState(Key[1]) < 0) || (GetAsyncKeyState(Key[7]) < 0)) {
 			while ((GetAsyncKeyState(Key[1]) < 0) || (GetAsyncKeyState(Key[7]) < 0));
 
-			screenY = (boardY - 1 >= 0) ? (screenY - jumpY) : (boardHeight + 1) / 2 + 8 + 2 * (boardHeight - 1);
-			boardY = (boardY - 1 >= 0) ? (boardY - 1) : boardHeight - 1;
-			GotoXY();
-			Display(screenWidth / 2 - (3 * boardWidth * unit + boardWidth + 1) / 2, (boardHeight + 1) / 2 + 7, screenWidth / 2 + (3 * boardWidth * unit + boardWidth + 1) / 2, (boardHeight + 1) / 2 + 7 + boardHeight * unit + boardHeight + 1);
+			boardY--;
+			if (boardY == -1) {
+				//Back - Options
+				ShowCur(0);
+				FlHi = 0;
+
+				BaOp = 1;
+
+				DrawBackbutton(6);
+				DrawOptionsbutton();
+				Display(0, 0, 4, 2);
+				Display(screenWidth - 5, 0, screenWidth - 1, 2);
+
+				DrawFlagbox(screenWidth / 2 - 9 / 2, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 8);
+				DrawHintbox(screenWidth / 2 + (3 * boardWidth * unit + boardWidth + 1) / 2 + 3, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 8);
+
+				Display(screenWidth / 2 - 9 / 2, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 8, screenWidth / 2 + (3 * boardWidth * unit + boardWidth + 1) / 2 + 8, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 11);
+			} else if (boardY == -2) {
+				//Flag - Hints
+				ShowCur(0);
+				BaOp = 0;
+
+				if (flag == 1)
+					FlHi = 1;
+				else
+					FlHi = 3;
+
+				DrawBackbutton();
+				DrawOptionsbutton();
+				Display(0, 0, 4, 2);
+				Display(screenWidth - 5, 0, screenWidth - 1, 2);
+
+				DrawFlagbox(screenWidth / 2 - 9 / 2, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 8, 6);
+				DrawHintbox(screenWidth / 2 + (3 * boardWidth * unit + boardWidth + 1) / 2 + 3, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 8);
+
+				Display(screenWidth / 2 - 9 / 2, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 8, screenWidth / 2 + (3 * boardWidth * unit + boardWidth + 1) / 2 + 8, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 11);
+			} else {
+				ShowCur(1);
+				BaOp = FlHi = 0;
+
+				DrawBackbutton();
+				DrawOptionsbutton();
+				Display(0, 0, 4, 2);
+				Display(screenWidth - 5, 0, screenWidth - 1, 2);
+
+				DrawFlagbox(screenWidth / 2 - 9 / 2, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 8);
+				DrawHintbox(screenWidth / 2 + (3 * boardWidth * unit + boardWidth + 1) / 2 + 3, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 8);
+
+				Display(screenWidth / 2 - 9 / 2, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 8, screenWidth / 2 + (3 * boardWidth * unit + boardWidth + 1) / 2 + 8, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 11);
+
+				if (boardY <= -3 || boardY >= boardHeight - 1) {
+					boardY = boardHeight - 1;
+					screenY = (boardHeight + 1) / 2 + 8 + 2 * (boardHeight - 1);
+				} else
+					screenY -= jumpY;
+				GotoXY();
+				Display(screenWidth / 2 - (3 * boardWidth * unit + boardWidth + 1) / 2, (boardHeight + 1) / 2 + 7, screenWidth / 2 + (3 * boardWidth * unit + boardWidth + 1) / 2, (boardHeight + 1) / 2 + 7 + boardHeight * unit + boardHeight + 1);
+			}
 		}
 
 		//left
 		if ((GetAsyncKeyState(Key[2]) < 0) || (GetAsyncKeyState(Key[8]) < 0)) {
 			while ((GetAsyncKeyState(Key[2]) < 0) || (GetAsyncKeyState(Key[8]) < 0));
 
-			screenX = (boardX - 1 >= 0) ? (screenX - jumpX) : screenWidth / 2 - (3 * boardWidth * unit + boardWidth + 1) / 2 + 2 + 4 * (boardWidth - 1);
-			boardX = (boardX - 1 >= 0) ? (boardX - 1) : boardWidth - 1;
-			GotoXY();
-			Display(screenWidth / 2 - (3 * boardWidth * unit + boardWidth + 1) / 2, (boardHeight + 1) / 2 + 7, screenWidth / 2 + (3 * boardWidth * unit + boardWidth + 1) / 2, (boardHeight + 1) / 2 + 7 + boardHeight * unit + boardHeight + 1);
+			if (BaOp != 0) {
+				FlHi = 0;
+
+				BaOp *= -1;
+				if (BaOp == 1) {
+					DrawBackbutton(6);
+					DrawOptionsbutton();
+				} else {
+					DrawBackbutton();
+					DrawOptionsbutton(6);
+				}
+				Display(0, 0, 4, 2);
+				Display(screenWidth - 5, 0, screenWidth - 1, 2);
+			} else if (FlHi != 0) {
+				BaOp = 0;
+
+				FlHi--;
+				if (FlHi <= 0)
+					FlHi = 3;
+
+				if (FlHi == 1)
+					flag = 1;
+				else if (FlHi == 3)
+					flag = -1;
+				//else Hint
+
+				if (FlHi == 1 || FlHi == 3) {
+					DrawFlagbox(screenWidth / 2 - 9 / 2, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 8, 6);
+					DrawHintbox(screenWidth / 2 + (3 * boardWidth * unit + boardWidth + 1) / 2 + 3, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 8);
+				} else {
+					DrawFlagbox(screenWidth / 2 - 9 / 2, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 8);
+					DrawHintbox(screenWidth / 2 + (3 * boardWidth * unit + boardWidth + 1) / 2 + 3, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 8, 6);
+				}
+				Display(screenWidth / 2 - 9 / 2, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 8, screenWidth / 2 + (3 * boardWidth * unit + boardWidth + 1) / 2 + 8, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 11);
+			} else {
+				screenX = (boardX - 1 >= 0) ? (screenX - jumpX) : screenWidth / 2 - (3 * boardWidth * unit + boardWidth + 1) / 2 + 2 + 4 * (boardWidth - 1);
+				boardX = (boardX - 1 >= 0) ? (boardX - 1) : boardWidth - 1;
+				GotoXY();
+				Display(screenWidth / 2 - (3 * boardWidth * unit + boardWidth + 1) / 2, (boardHeight + 1) / 2 + 7, screenWidth / 2 + (3 * boardWidth * unit + boardWidth + 1) / 2, (boardHeight + 1) / 2 + 7 + boardHeight * unit + boardHeight + 1);
+			}
 		}
 
 		//down
 		if ((GetAsyncKeyState(Key[3]) < 0) || (GetAsyncKeyState(Key[9]) < 0)) {
 			while ((GetAsyncKeyState(Key[3]) < 0) || (GetAsyncKeyState(Key[9]) < 0));
 
-			screenY = (boardY + 1 < boardHeight) ? (screenY + jumpY) : (boardHeight + 1) / 2 + 8;
-			boardY = (boardY + 1 < boardHeight) ? (boardY + 1) : 0;
-			GotoXY();
-			Display(screenWidth / 2 - (3 * boardWidth * unit + boardWidth + 1) / 2, (boardHeight + 1) / 2 + 7, screenWidth / 2 + (3 * boardWidth * unit + boardWidth + 1) / 2, (boardHeight + 1) / 2 + 7 + boardHeight * unit + boardHeight + 1);
+			boardY++;
+			if (boardY == boardHeight) {
+				//Flag - Hints
+				ShowCur(0);
+				BaOp = 0;
+
+				if (flag == 1)
+					FlHi = 1;
+				else
+					FlHi = 3;
+
+				DrawBackbutton();
+				DrawOptionsbutton();
+				Display(0, 0, 4, 2);
+				Display(screenWidth - 5, 0, screenWidth - 1, 2);
+
+				DrawFlagbox(screenWidth / 2 - 9 / 2, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 8, 6);
+				DrawHintbox(screenWidth / 2 + (3 * boardWidth * unit + boardWidth + 1) / 2 + 3, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 8);
+
+				Display(screenWidth / 2 - 9 / 2, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 8, screenWidth / 2 + (3 * boardWidth * unit + boardWidth + 1) / 2 + 8, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 11);
+			}
+			else if (boardY == boardHeight + 1) {
+				//Back - Options
+				ShowCur(0);
+				FlHi = 0;
+
+				BaOp = 1;
+
+				DrawBackbutton(6);
+				DrawOptionsbutton();
+				Display(0, 0, 4, 2);
+				Display(screenWidth - 5, 0, screenWidth - 1, 2);
+
+				DrawFlagbox(screenWidth / 2 - 9 / 2, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 8);
+				DrawHintbox(screenWidth / 2 + (3 * boardWidth * unit + boardWidth + 1) / 2 + 3, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 8);
+
+				Display(screenWidth / 2 - 9 / 2, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 8, screenWidth / 2 + (3 * boardWidth * unit + boardWidth + 1) / 2 + 8, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 11);
+			} else {
+				ShowCur(1);
+				BaOp = FlHi = 0;
+
+				DrawBackbutton();
+				DrawOptionsbutton();
+				Display(0, 0, 4, 2);
+				Display(screenWidth - 5, 0, screenWidth - 1, 2);
+
+				DrawFlagbox(screenWidth / 2 - 9 / 2, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 8);
+				DrawHintbox(screenWidth / 2 + (3 * boardWidth * unit + boardWidth + 1) / 2 + 3, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 8);
+
+				Display(screenWidth / 2 - 9 / 2, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 8, screenWidth / 2 + (3 * boardWidth * unit + boardWidth + 1) / 2 + 8, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 11);
+
+				if (boardY >= boardHeight + 2 || boardY <= 0) {
+					boardY = 0;
+					screenY = (boardHeight + 1) / 2 + 8;
+				} else
+					screenY += jumpY;
+				GotoXY();
+				Display(screenWidth / 2 - (3 * boardWidth * unit + boardWidth + 1) / 2, (boardHeight + 1) / 2 + 7, screenWidth / 2 + (3 * boardWidth * unit + boardWidth + 1) / 2, (boardHeight + 1) / 2 + 7 + boardHeight * unit + boardHeight + 1);
+			}
 		}
 
 		//enter
 		if ((GetAsyncKeyState(Key[4]) < 0) || (GetAsyncKeyState(Key[10]) < 0)) {
 			while ((GetAsyncKeyState(Key[4]) < 0) || (GetAsyncKeyState(Key[10]) < 0));
 
-			if (boardMat[boardY][boardX] == 0) {
+			if (BaOp != 0) {
+				//Back - Options
+				FlHi = 0;
+
+				if (BaOp == 1)
+					break;
+				else
+					//Options
+					break;
+			} else if (FlHi != 0) {
+				//Flag - Hints
+				BaOp = 0;
+
+				FlHi *= -1;
+				flag *= -1;
+				DrawFlagbox(screenWidth / 2 - 9 / 2, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 8);
+				Display(screenWidth / 2 - 9 / 2, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 8, screenWidth / 2 + 9 / 2, (boardHeight + 1) / 2 + boardHeight * unit + boardHeight + 1 + 11);
+			} else if (boardMat[boardY][boardX] == 0) {
 				boardMat[boardY][boardX] = answerMat[boardY][boardX];
 				if (flag != answerMat[boardY][boardX]) {
 					health--;
@@ -211,9 +411,9 @@ int Single(int idGame) {
 					Display(screenWidth / 2 - 17 / 2, 3, screenWidth / 2 + 17 / 2, 6);
 				}
 				AutoMark(numsList);
+				DrawBoard(screenWidth / 2 - (3 * boardWidth * unit + boardWidth + 1) / 2, (boardHeight + 1) / 2 + 7);
+				Display(screenWidth / 2 - (3 * boardWidth * unit + boardWidth + 1) / 2, (boardHeight + 1) / 2 + 7, screenWidth / 2 + (3 * boardWidth * unit + boardWidth + 1) / 2, (boardHeight + 1) / 2 + 7 + boardHeight * unit + boardHeight + 1);
 			}
-			DrawBoard(screenWidth / 2 - (3 * boardWidth * unit + boardWidth + 1) / 2, (boardHeight + 1) / 2 + 7);
-			Display(screenWidth / 2 - (3 * boardWidth * unit + boardWidth + 1) / 2, (boardHeight + 1) / 2 + 7, screenWidth / 2 + (3 * boardWidth * unit + boardWidth + 1) / 2, (boardHeight + 1) / 2 + 7 + boardHeight * unit + boardHeight + 1);
 		}
 
 		//swap
